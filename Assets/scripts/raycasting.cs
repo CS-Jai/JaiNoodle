@@ -22,26 +22,34 @@ public class raycasting : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Responsible for keeping stuff highlighted visually
         highLightStuff();
+
+        // When a piece is selected
         if(selection != null)
         {
+            // curSelected is the gameobject that is currently selected
             curSelected = selection.gameObject;
 
+            // Shoots ray and gets all objects it hits
             Vector2 mousePos = Input.mousePosition;
-
             Ray ray = Camera.main.ScreenPointToRay(mousePos);
             RaycastHit[] hits = Physics.RaycastAll(ray);
-
+            
+            // Iterates through each hit
             foreach (RaycastHit hit in hits)
             {
+                // if the hit has a tag space (space is the colliders in the box where the noodles go)
                 if (hit.transform.CompareTag("Space"))
-                {
+                {   
+                    // If you click on space
                     if (Input.GetMouseButtonDown(0))
                     {
+                        // Turns off gravity and hitbox for object selected
                         curSelected.GetComponent<Rigidbody>().isKinematic = true;
+                        curSelected.GetComponent<Rigidbody>().useGravity = false;
 
-
-
+                        // Undoes highlight efftect
                         if (highlight)
                         {
                             if (selection != null)
@@ -61,7 +69,7 @@ public class raycasting : MonoBehaviour
                             }
                         }
                     }
-                    else
+                    else // Until clicked the piece selected will snap to the center of the space youre mousing over
                     {
                          SnapToSpace(hit);
                     }
@@ -70,7 +78,7 @@ public class raycasting : MonoBehaviour
         }
         else
         {
-            // Selection
+            // If no piece is selected and button clicked. Selects piece
             if (Input.GetMouseButtonDown(0))
             {
                 if (highlight)
@@ -102,12 +110,6 @@ public class raycasting : MonoBehaviour
         Vector3 target = hit.collider.bounds.center;
 
         Transform anchor = curSelected.transform.Find("Anchor");
-        if (anchor == null)
-        {
-            // fallback if no anchor
-            curSelected.transform.position = target;
-            return;
-        }
 
         // move so anchor lands on target
         Vector3 offset = anchor.position - curSelected.transform.position;
