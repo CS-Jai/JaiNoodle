@@ -22,19 +22,6 @@ public class raycasting : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector2 mousePos = Input.mousePosition;
-
-            Ray ray = Camera.main.ScreenPointToRay(mousePos);
-            RaycastHit[] hits = Physics.RaycastAll(ray);
-
-            foreach (RaycastHit hit in hits)
-            {
-                Debug.Log(hit.collider.gameObject.name);
-            }
-        }
-
         highLightStuff();
         if(selection != null)
         {
@@ -49,24 +36,85 @@ public class raycasting : MonoBehaviour
             {
                 if (hit.transform.CompareTag("Space"))
                 {
-                    curSelected.transform.rotation = Quaternion.identity;
-                    curSelected.transform.position = Vector3.zero;
-
-                    Debug.Log(hit.collider.gameObject.name);
-
-                    float x = hit.transform.position.x;
-                    float y = hit.transform.position.y;
-                    float z = hit.transform.position.z;
-
-                    curSelected.transform.position = new Vector3(x, y, z + 10);
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        curSelected.GetComponent<Rigidbody>().isKinematic = true;
 
 
-                    //Makes piece flat
-                    
+
+                        if (highlight)
+                        {
+                            if (selection != null)
+                            {
+                                selection.gameObject.GetComponent<Outline>().enabled = false;
+                            }
+                            selection = raycastHit.transform;
+                            selection.gameObject.GetComponent<Outline>().enabled = true;
+                            highlight = null;
+                        }
+                        else
+                        {
+                            if (selection)
+                            {
+                                selection.gameObject.GetComponent<Outline>().enabled = false;
+                                selection = null;
+                            }
+                        }
+                    }
+                    else
+                    {
+                         SnapToSpace(hit);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Selection
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (highlight)
+                {
+                    if (selection != null)
+                    {
+                        selection.gameObject.GetComponent<Outline>().enabled = false;
+                    }
+                    selection = raycastHit.transform;
+                    selection.gameObject.GetComponent<Outline>().enabled = true;
+                    highlight = null;
+                }
+                else
+                {
+                    if (selection)
+                    {
+                        selection.gameObject.GetComponent<Outline>().enabled = false;
+                        selection = null;
+                    }
                 }
             }
         }
         
+    }
+
+    void SnapToSpace(RaycastHit hit)
+    {
+        // center of the space collider in world space
+        Vector3 target = hit.collider.bounds.center;
+
+        Transform anchor = curSelected.transform.Find("Anchor");
+        if (anchor == null)
+        {
+            // fallback if no anchor
+            curSelected.transform.position = target;
+            return;
+        }
+
+        // move so anchor lands on target
+        Vector3 offset = anchor.position - curSelected.transform.position;
+        curSelected.transform.position = target - offset;
+
+        // optional: keep piece flat
+        curSelected.transform.rotation = Quaternion.identity;
     }
 
     void highLightStuff()
@@ -98,29 +146,6 @@ public class raycasting : MonoBehaviour
             else
             {
                 highlight = null;
-            }
-        }
-
-        // Selection
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (highlight)
-            {
-                if (selection != null)
-                {
-                    selection.gameObject.GetComponent<Outline>().enabled = false;
-                }
-                selection = raycastHit.transform;
-                selection.gameObject.GetComponent<Outline>().enabled = true;
-                highlight = null;
-            }
-            else
-            {
-                if (selection)
-                {
-                    selection.gameObject.GetComponent<Outline>().enabled = false;
-                    selection = null;
-                }
             }
         }
     }
